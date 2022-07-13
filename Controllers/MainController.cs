@@ -10,7 +10,7 @@ namespace Todos.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class Controller : ControllerBase
+    public class MainController : ControllerBase
     {
         [HttpGet("Check/{id}")]
         public IActionResult Check(int id)

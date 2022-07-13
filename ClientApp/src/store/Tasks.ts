@@ -134,7 +134,7 @@ const requestTasks = (dispatch: (action: KnownAction) => void, getState: () => A
     const appState = getState();
     if (appState && appState.tasks && appState.tasks.User) {
         dispatch({ type: 'REQUEST_TASKS', user: appState.tasks.User });
-        fetch(`values/GetTasks/${appState.tasks.User.userId}`)
+        fetch(`main/GetTasks/${appState.tasks.User.userId}`)
             .then(response => response.json() as Promise<Task[]>)
             .then(data => {
                 dispatch({ type: 'RECEIVE_TASKS', tasks: data });
@@ -149,7 +149,7 @@ export const actionCreators = {
         const appState = getState();
         if (appState) {
             dispatch({ type: 'REQUEST_USERS' });
-            fetch(`values/GetUsers`)
+            fetch(`main/GetUsers`)
                 .then(response => response.json() as Promise<Array<User>>)
                 .then(data => {
                     dispatch({ type: 'RECEIVE_USERS', users: data });
@@ -161,7 +161,7 @@ export const actionCreators = {
         const appState = getState();
         if (appState) {
             dispatch({ type: 'REQUEST_USER' });
-            fetch(`values/GetUser/${!!userId ? userId : 0}`)
+            fetch(`main/GetUser/${!!userId ? userId : 0}`)
                 .then(response => response.json() as Promise<User>)
                 .then(data => {
                     dispatch({ type: 'RECEIVE_USER', user: !!data.userId ? data : null });
@@ -172,7 +172,7 @@ export const actionCreators = {
         // Only load data if it's something we don't already have (and are not already loading)
         const appState = getState();
         if (appState) {
-            fetch(`values/Check/${task.taskId}`)
+            fetch(`main/Check/${task.taskId}`)
                 .then(response => {
                     dispatch({ type: 'CHECKED_TASK', isOk: response.ok, task: task });
                 }).then(() => requestTasks(dispatch, getState));
@@ -182,7 +182,7 @@ export const actionCreators = {
         // Only load data if it's something we don't already have (and are not already loading)
         const appState = getState();
         if (appState) {
-            fetch(`values/Postpone/${task.taskId}`)
+            fetch(`main/Postpone/${task.taskId}`)
                 .then(response => {
                     dispatch({ type: 'POSTPONED_TASK', isOk: response.ok, task: task });
                 }).then(() => requestTasks(dispatch, getState));
@@ -192,7 +192,7 @@ export const actionCreators = {
         // Only load data if it's something we don't already have (and are not already loading)
         const appState = getState();
         if (appState) {
-            fetch(`values/Delete/${task.taskId}`, { method: 'DELETE' })
+            fetch(`main/Delete/${task.taskId}`, { method: 'DELETE' })
                 .then(response => {
                     dispatch({ type: 'DELETED_TASK', isOk: response.ok, task: task });
                 }).then(() => requestTasks(dispatch, getState));
@@ -212,7 +212,7 @@ export const actionCreators = {
         // Only load data if it's something we don't already have (and are not already loading)
 
         if (appState) {
-            fetch(`values/Schedule`, requestOptions)
+            fetch(`main/Schedule`, requestOptions)
                 .then(response => {
                     dispatch({ type: 'SCHEDULED_TASK', isOk: response.ok, task: task });
                 }).then(() => requestTasks(dispatch, getState));
@@ -231,7 +231,7 @@ export const actionCreators = {
                     interval: interval
                 })
             };
-            fetch(`values/Create`, requestOptions)
+            fetch(`main/Create`, requestOptions)
                 .then(response => response.json() as Promise<Task>)
                 .then(data => {
                     dispatch({ type: 'ADDED_TASK', task: data });
