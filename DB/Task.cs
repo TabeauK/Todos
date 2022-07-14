@@ -20,7 +20,6 @@ namespace Todos
         public int UserId { get; set; }
         [ForeignKey("UserId")]
         public User User { get; set; }
-        public string CalendarEventId { get; set; }
         public State State { get; set; }
         public DateTime AddedDate { get; set; }
         public DateTime? Scheduled { get; set; }
@@ -29,48 +28,36 @@ namespace Todos
         internal static void Check(int id)
         {
             using TaskContext ctx = new();
-            var task = ctx.Tasks.Where(x => x.TaskId == id).Include(i => i.User).Include(i => i.Checks).First();
-            //task.Validate();
-            //Event e = task.User.CalendarService.Events.Get(task.User.CalendarId, task.CalendarEventId).Execute();
-            task.Checks.Add(new Check() { Date = DateTime.Now });
+            Task task = ctx.Tasks
+                .Where(x => x.TaskId == id)
+                .Include(i => i.User)
+                .Include(i => i.Checks)
+                .First();
+            task.Checks.Add(new Check() 
+            { 
+                Date = DateTime.Now 
+            });
             task.ExtraTime = 0;
-            //e.Start = new EventDateTime()
-            //{
-            //    Date = (DateTime.Now + new TimeSpan(task.Interval, 0, 0, 0)).ToString("yyyy-MM-dd")
-            //};
-            //e.End = new EventDateTime()
-            //{
-            //    Date = (DateTime.Now + new TimeSpan(task.Interval + 1, 0, 0, 0)).ToString("yyyy-MM-dd")
-            //};
-            //e.ColorId = "2";
             task.Scheduled = null;
             task.Meeting = null;
-            //task.User.CalendarService.Events.Update(e, task.User.CalendarId, task.CalendarEventId).Execute();
             ctx.SaveChanges();
         }
 
         internal static void Schedule(int id, DateTime date, DateTime? meeting)
         {
-
             using TaskContext ctx = new();
-            Task task = ctx.Tasks.Where(x => x.TaskId == id).Include(i => i.User).Include(i => i.Checks).First();
-            //task.Validate();
+            Task task = ctx.Tasks
+                .Where(x => x.TaskId == id)
+                .Include(i => i.User)
+                .Include(i => i.Checks)
+                .First();
             task.Meeting = new TimeSpan(1, 0, 0);
             if (meeting.HasValue)
+            {
                 task.Meeting = new TimeSpan((meeting.Value.Hour + 2) % 24, meeting.Value.Minute, 0);
-            //Event e = task.User.CalendarService.Events.Get(task.User.CalendarId, task.CalendarEventId).Execute();
+            }
             task.Scheduled = date;
-            //e.Start = new EventDateTime()
-            //{
-            //    Date = date.ToString("yyyy-MM-dd")
-            //};
-            //e.End = new EventDateTime()
-            //{
-            //    Date = (date + task.Meeting.Value).ToString("yyyy-MM-dd"),
-            //};
-            //e.ColorId = "1";
             task.State = State.Scheduled;
-            //task.User.CalendarService.Events.Update(e, task.User.CalendarId, task.CalendarEventId).Execute();
             ctx.SaveChanges();
         }
 
@@ -81,7 +68,9 @@ namespace Todos
             {
                 DateTime compareDate = AddedDate;
                 if (Checks is not null)
+                {
                     compareDate = Checks.OrderBy(x => x.Date).Last().Date;
+                }
                 if (DateTime.Now > compareDate + new TimeSpan(Interval + ExtraTime, 0,0,0))
                 {
                     State = State.Urgent;
@@ -116,54 +105,22 @@ namespace Todos
                         State = State.Safe;
                     }
                 }
-                if (start != State)
-                {
-                    //Event e = User.CalendarService.Events.Get(User.CalendarId, CalendarEventId).Execute();
-
-                    //if (State == State.Urgent)
-                    //{
-                    //    e.ColorId = "4";
-                    //}
-                    //else if (State == State.VeryClose)
-                    //{
-                    //    e.ColorId = "6";
-                    //}
-                    //else if (State == State.Close)
-                    //{
-                    //    e.ColorId = "5";
-                    //}
-                    //else if (State == State.Safe)
-                    //{
-                    //    e.ColorId = "2";
-                    //}
-                    //User.CalendarService.Events.Update(e, User.CalendarId, CalendarEventId).Execute();
-                }
             }
             else if (DateTime.Now > Scheduled)
             {
-                //Event e = User.CalendarService.Events.Get(User.CalendarId, CalendarEventId).Execute();
                 Checks.Add(new Check() { Date = Scheduled.Value });
-                ExtraTime = 0;
-                //e.Start = new EventDateTime()
-                //{
-                //    Date = (Scheduled.Value + new TimeSpan(Interval, 0, 0, 0)).ToString("yyyy-MM-dd")
-                //};
-                //e.End = new EventDateTime()
-                //{
-                //    Date = (Scheduled.Value + new TimeSpan(Interval + 1, 0, 0, 0)).ToString("yyyy-MM-dd")
-                //};
-                //e.ColorId = "2";
                 Scheduled = null;
-                //User.CalendarService.Events.Update(e, User.CalendarId, CalendarEventId).Execute();
             }
         }
 
         internal static void Delete(int id)
         {
             using TaskContext ctx = new();
-            Task task = ctx.Tasks.Where(x => x.TaskId == id).Include(i => i.User).Include(i => i.Checks).First();
-            //task.Validate();
-            //task.User.CalendarService.Events.Delete(task.User.CalendarId, task.CalendarEventId).Execute();
+            Task task = ctx.Tasks
+                .Where(x => x.TaskId == id)
+                .Include(i => i.User)
+                .Include(i => i.Checks)
+                .First();
             ctx.Checks.RemoveRange(task.Checks);
             ctx.Tasks.Remove(task);
             ctx.SaveChanges();
@@ -172,10 +129,12 @@ namespace Todos
         internal static void Postpone(int id)
         {
             using TaskContext ctx = new();
-            Task task = ctx.Tasks.Where(x => x.TaskId == id).Include(i => i.User).Include(i => i.Checks).First();
-            //task.Validate();
+            Task task = ctx.Tasks
+                .Where(x => x.TaskId == id)
+                .Include(i => i.User)
+                .Include(i => i.Checks)
+                .First();
             task.ExtraTime += 7;
-            //task.Validate();
             ctx.SaveChanges();
         }
 
@@ -183,7 +142,12 @@ namespace Todos
         {
             List<Check> list = new();
             if (lastDone.HasValue)
-                list.Add(new Check() { Date = lastDone.Value });
+            {
+                list.Add(new Check() 
+                { 
+                    Date = lastDone.Value 
+                });
+            }
 
             Task task = new()
             {
@@ -197,13 +161,10 @@ namespace Todos
                 Scheduled = null,
             };
 
-            //task.CalendarEventId = CreateEvent(task, user);
+            task.UpdateState();
+
             using TaskContext ctx = new();
             ctx.Tasks.Add(task);
-            ctx.SaveChanges();
-
-            Task task2 = ctx.Tasks.Where(x => x.TaskId == task.TaskId).Include(i => i.User).Include(i => i.Checks).First();
-            task2.UpdateState();
             ctx.SaveChanges();
 
             return task;
@@ -224,77 +185,6 @@ namespace Todos
                 Checks = Checks.ConvertToDTOList() 
             };
         }
-
-        //private static string CreateEvent(Task task, User user)
-        //{
-        //    DateTime initialDate = DateTime.Now + new TimeSpan(task.Interval + task.ExtraTime, 0, 0, 0);
-        //    if (task.Checks.Count > 0)
-        //        initialDate = task.Checks.Last().Date + new TimeSpan(task.Interval + task.ExtraTime, 0, 0, 0);
-
-        //    Event e = user.CalendarService.Events.Insert(new Event()
-        //    {
-        //        Summary = task.Name,
-        //        Start = new EventDateTime()
-        //        {
-        //            Date = initialDate.ToString("yyyy-MM-dd")
-        //        },
-        //        End = new EventDateTime()
-        //        {
-        //            Date = (initialDate + new TimeSpan(1, 0, 0, 0)).ToString("yyyy-MM-dd")
-        //        },
-        //    }, user.CalendarId).Execute();
-
-        //    return e.Id;
-        //}
-
-        //public void Validate()
-        //{
-        //    using TaskContext ctx = new();
-        //    Event e = User.CalendarService.Events.Get(User.CalendarId, CalendarEventId).Execute();
-        //    if (e is null || e.Status == "cancelled")
-        //    {
-        //        CalendarEventId = CreateEvent(this, User);
-        //    }
-        //    else
-        //    {
-        //        DateTime initialDate = AddedDate + new TimeSpan(Interval + ExtraTime, 0, 0, 0) ;
-        //        if (Checks.Count > 0)
-        //            initialDate = Checks.Last().Date + new TimeSpan(Interval + ExtraTime, 0, 0, 0);
-
-        //        if(State.Scheduled == State && Scheduled.HasValue && Meeting.HasValue)
-        //        {
-        //            if (e.Start.Date != Scheduled.Value.ToString("yyyy-MM-dd"))
-        //            {
-        //                e.Start.Date = Scheduled.Value.ToString("yyyy-MM-dd");
-        //                e.Start.DateTime = null;
-        //                e.End.Date = (Scheduled.Value + Meeting.Value).ToString("yyyy-MM-dd");
-        //                e.End.DateTime = null;
-        //                try
-        //                {
-        //                    User.CalendarService.Events.Update(e, User.CalendarId, CalendarEventId).Execute();
-        //                }
-        //                catch (Google.GoogleApiException) { }
-        //            }
-        //        }
-        //        else if(e.End.Date != (initialDate + new TimeSpan(1, 0, 0, 0)).ToString("yyyy-MM-dd") || e.Start.Date != initialDate.ToString("yyyy-MM-dd"))
-        //        {
-        //            e.End.Date = (initialDate + new TimeSpan(1, 0, 0, 0)).ToString("yyyy-MM-dd");
-        //            e.Start.Date = initialDate.ToString("yyyy-MM-dd");
-        //            e.Start.DateTime = null;
-        //            e.End.DateTime = null;
-        //            try
-        //            {
-        //                User.CalendarService.Events.Update(e, User.CalendarId, CalendarEventId).Execute();
-        //            }
-        //            catch (Google.GoogleApiException) { }
-        //        }
-        //        State = State.Invalid;
-        //        if (int.TryParse(e.ColorId, out int ColorId))
-        //            if(Enum.IsDefined(typeof(State), ColorId))
-        //                State = (State) ColorId;
-        //    }
-        //    UpdateState();
-        //}
     }
 
     public class TaskDTO

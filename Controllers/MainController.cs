@@ -60,9 +60,13 @@ namespace Todos.Controllers
         {
             using TaskContext ctx = new();
             if (userId > 0)
+            {
                 return Ok(ctx.Users.Where(x => x.Id == userId).ToList().ConvertToDTOList()[0]);
+            }
             else
+            {
                 return Ok(ctx.Users.ToList().ConvertToDTOList()[0]);
+            }
         }
 
         [HttpGet("GetTasks/{userId}")]
@@ -70,14 +74,14 @@ namespace Todos.Controllers
         {
             using TaskContext ctx = new();
             if (!userId.HasValue)
+            {
                 userId = ctx.Users.FirstOrDefault().Id;
-            List<Task> tasks = ctx.Tasks.Where(x => x.UserId == userId.Value).Include(i => i.User).Include(i => i.Checks).ToList();
-            //try
-            //{
-            //    tasks.ForEach(x => x.Validate());
-            //    ctx.SaveChanges();
-            //}
-            //catch (Exception) { }
+            }
+            List<Task> tasks = ctx.Tasks
+                .Where(x => x.UserId == userId.Value)
+                .Include(i => i.User)
+                .Include(i => i.Checks)
+                .ToList();
             return Ok(tasks.ConvertToDTOList());
         }
     }

@@ -24,7 +24,7 @@ namespace Todos
 
         public DbSet<Check> Checks { get; set; }
 
-        public class TaskDBInit : CreateDatabaseIfNotExists<TaskContext>
+        public class TaskDBInit : CreateDatabaseIfNotExists <TaskContext>
         { 
             protected override void Seed(TaskContext context)
             {
