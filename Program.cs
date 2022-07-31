@@ -15,8 +15,9 @@ namespace Todos
     {
         public static void Main(string[] args)
         {
-            using TaskContext ctx = new();
-            CreateHostBuilder(args).Build().Run();
+            CreateHostBuilder(args)
+                .Build()
+                .Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

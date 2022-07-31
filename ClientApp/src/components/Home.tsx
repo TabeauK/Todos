@@ -158,7 +158,7 @@ class FetchData extends React.PureComponent<TaskProps> {
                             <InputText
                                 id="in"
                                 value={this.state.newTaskName}
-                                onChange={(e) => this.setState({ newTaskName: e.target.value }, () => this.validateNewTaskName())}
+                                onChange={(e) => this.setState({ newTaskName: (e.target as HTMLInputElement).value }, () => this.validateNewTaskName())}
                                 className={this.state.newTaskNameValid ? "" : "p-invalid"}
                             />
                             <label htmlFor="in">Nazwa</label>

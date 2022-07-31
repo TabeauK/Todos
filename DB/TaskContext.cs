@@ -1,14 +1,11 @@
 ﻿using System.Data.Entity;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Todos
 {
     public class TaskContext : DbContext
     {
-        public TaskContext() : base("Server=DESKTOP-P7O54AJ;Database=tasks;Trusted_Connection=True;") //todo: do appsetiings
+        public TaskContext() : base(Constants.ConnectionString)
         {
             Database.SetInitializer(new TaskDBInit());
         }
