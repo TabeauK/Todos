@@ -21,8 +21,8 @@ namespace Todos.Controllers
         [HttpPost("Schedule")]
         public IActionResult Schedule([FromBody] TaskToSchedule task)
         {
-            Task.Schedule(task.Id, task.Date, task.Meeting);
-            return Ok();
+            Task task2 = Task.Schedule(task.Id, task.Date, task.Meeting);
+            return Ok(task2);
         }
 
         [HttpGet("Postpone/{id}")]

@@ -100,7 +100,6 @@ interface PostponedTaskAction {
 interface ScheduledTaskAction {
     type: 'SCHEDULED_TASK';
     task: Task;
-    isOk: boolean;
 }
 
 interface AddedTaskAction {
@@ -198,13 +197,13 @@ export const actionCreators = {
                 }).then(() => requestTasks(dispatch, getState));
         }
     },
-    scheduleTaskAction: (task: Task, date: Date, timeInterval: Date | null): AppThunkAction<KnownAction> => (dispatch, getState) => {
+    scheduleTaskAction: (taskId: number, date: Date, timeInterval: Date | null): AppThunkAction<KnownAction> => (dispatch, getState) => {
         const appState = getState();
         const requestOptions = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                id: task.taskId,
+                id: taskId,
                 date: date,
                 meeting: timeInterval,
             })
@@ -213,8 +212,9 @@ export const actionCreators = {
 
         if (appState) {
             fetch(`main/Schedule`, requestOptions)
-                .then(response => {
-                    dispatch({ type: 'SCHEDULED_TASK', isOk: response.ok, task: task });
+                .then(response => response.json() as Promise<Task>)
+                .then(data => {
+                    dispatch({ type: 'SCHEDULED_TASK', task: data });
                 }).then(() => requestTasks(dispatch, getState));
         }
     },
@@ -268,7 +268,7 @@ export const reducer: Reducer<TasksState> = (state: TasksState | undefined, inco
             }
             break;
         case 'SCHEDULED_TASK':
-            if (action.isOk) {
+            if (!!action.task) {
                 let tasks = state.Tasks
                 tasks[tasks.findIndex(x => action.task.taskId === x.taskId)] = action.task;
                 return {

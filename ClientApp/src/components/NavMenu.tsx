@@ -48,8 +48,8 @@ class NavMenu extends React.PureComponent<TaskProps> {
                         <Collapse isOpen={!this.state.collapsed} navbar>
                             <Nav navbar>
                                 {this.props.AllUsers.map(user =>
-                                    <NavItem>
-                                        <NavLink key={`/${user.userId}`} tag={Link} to={`/${user.userId}`} onClick={() => this.props.requestUser(user.userId)}> {user.userName}</NavLink>
+                                    <NavItem key={`/${user.userId}`}>
+                                        <NavLink tag={Link} to={`/${user.userId}`} onClick={() => this.props.requestUser(user.userId)}> {user.userName}</NavLink>
                                     </NavItem>
                                 )}
                             </Nav>

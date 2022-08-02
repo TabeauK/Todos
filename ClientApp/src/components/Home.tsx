@@ -29,6 +29,7 @@ class FetchData extends React.PureComponent<TaskProps> {
         newTaskLastDate: new Date(),
         newTaskLastDateValid: true,
         scheduleOp: React.createRef<OverlayPanel>(),
+        scheduleTaskId: 0,
         scheduleDate: new Date(),
         scheduleTime: new Date("2020-01-01 01:00"),
         scheduleDateValid: true,
@@ -37,7 +38,7 @@ class FetchData extends React.PureComponent<TaskProps> {
 
     public componentDidMount() {
         this.props.requestUser(null);
-        setInterval(() => this.props.requestTasks() , 3000)
+        setInterval(() => this.props.requestTasks() , 60000)
     }
 
     public render() {
@@ -170,6 +171,7 @@ class FetchData extends React.PureComponent<TaskProps> {
                                 value={this.state.newTaskLastDate === null ? this.state.newTaskLastDate : undefined}
                                 onChange={(e) => this.setState({ newTaskLastDate: e.target.value }, () => this.validateNewTaskLastDate())}
                                 maxDate={new Date(Date.now())}
+                                dateFormat="dd/mm/yy"
                                 className={"p-d-flex p-float-label " + this.state.newTaskLastDateValid ? "" : "p-invalid"}
                             />
                         </div>
@@ -231,6 +233,7 @@ class FetchData extends React.PureComponent<TaskProps> {
                         minDate={new Date(Date.now())}
                         showTime
                         hourFormat="24"
+                        dateFormat="dd/mm/yy"
                         className={"p-d-flex p-float-label " + this.state.scheduleDateValid ? "" : "p-invalid"}
                     />
                 </div>
@@ -242,17 +245,18 @@ class FetchData extends React.PureComponent<TaskProps> {
                         onChange={(e) => this.setState({ scheduleTime: e.target.value }, () => this.validateScheduleTime())}
                         timeOnly
                         hourFormat="24"
+                        dateFormat="dd/mm/yy"
                         className={"p-d-flex p-float-label " + this.state.scheduleTimeValid ? "" : "p-invalid"}
                     />
                 </div>
                 <div className="p-float-label p-mb-2 p-fluid">
-                    <Button type="button" icon="pi pi-calendar-plus" label={'Zaplanuj'} onClick={(e) => {
+                    <Button type="button" icon="pi pi-calendar-plus" value={data.taskId} label={'Zaplanuj'} onClick={(e) => {
                         this.validateScheduleDate();
                         this.validateScheduleTime();
                         if (this.state.scheduleDateValid &&
                             this.state.scheduleTimeValid) {
                             this.props.scheduleTaskAction(
-                                data,
+                                this.state.scheduleTaskId,
                                 this.state.scheduleDate,
                                 this.state.scheduleTime
                             );
@@ -262,6 +266,7 @@ class FetchData extends React.PureComponent<TaskProps> {
                                 scheduleTime: new Date("2020-01-01 01:00"),
                                 scheduleDateValid: true,
                                 scheduleTimeValid: true,
+                                scheduleTaskId: 0
                             });
                             (this.state.scheduleOp.current as OverlayPanel).hide();
                         }}
@@ -287,7 +292,10 @@ class FetchData extends React.PureComponent<TaskProps> {
                         <i className="pi pi-tag product-category-icon"></i><span className="product-category">{this.statusName(data)}</span>
                     </div>
                     <div className="product-list-action">
-                        <Button type="button" icon="pi pi-calendar" label={'Zaplanuj'} onClick={(e) => (this.state.scheduleOp.current as OverlayPanel).toggle(e)} aria-haspopup aria-controls="overlay_panel" className="select-product-button" />
+                        <Button type="button" icon="pi pi-calendar" label={'Zaplanuj'} onClick={(e) => {
+                            (this.state.scheduleOp.current as OverlayPanel).toggle(e);
+                            this.setState({ scheduleTaskId: data.taskId });
+                        }} aria-haspopup aria-controls="overlay_panel" className="select-product-button" />
                         {this.ScheduleOverlay(data)}
                         <Button icon="pi pi-check-square" label="Zrobione" onClick={() => this.props.checkTaskAction(data)} />
                         <Button icon="pi pi-step-forward" label="Odłóż" onClick={() => this.props.postponeTaskAction(data)} />
@@ -319,7 +327,10 @@ class FetchData extends React.PureComponent<TaskProps> {
                         </div>
                     </div>
                     <div className="product-grid-item-bottom">
-                        <Button type="button" icon="pi pi-calendar" label={'Zaplanuj'} onClick={(e) => (this.state.scheduleOp.current as OverlayPanel).toggle(e)} aria-haspopup aria-controls="overlay_panel" className="select-product-button" />
+                        <Button type="button" icon="pi pi-calendar" label={'Zaplanuj'} onClick={(e) => {
+                            (this.state.scheduleOp.current as OverlayPanel).toggle(e);
+                            this.setState({ scheduleTaskId: data.taskId });
+                        }} aria-haspopup aria-controls="overlay_panel" className="select-product-button" />
                         {this.ScheduleOverlay(data)}
                         <Button icon="pi pi-check-square" label="Zrobione" onClick={() => this.props.checkTaskAction(data)} />
                         <Button icon="pi pi-step-forward" label="Odłóż" onClick={() => this.props.postponeTaskAction(data)} />

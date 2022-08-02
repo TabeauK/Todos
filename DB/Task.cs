@@ -41,7 +41,7 @@ namespace Todos
             ctx.SaveChanges();
         }
 
-        internal static void Schedule(int id, DateTime date, DateTime? meeting)
+        internal static Task Schedule(int id, DateTime date, DateTime? meeting)
         {
             using TaskContext ctx = new();
             Task task = ctx.Tasks
@@ -57,6 +57,7 @@ namespace Todos
             task.Scheduled = date;
             task.State = State.Scheduled;
             ctx.SaveChanges();
+            return task;
         }
 
         public void UpdateState()
