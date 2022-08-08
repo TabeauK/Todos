@@ -1,6 +1,5 @@
 ﻿import * as React from 'react';
 import { connect } from 'react-redux';
-/*import { Link } from 'react-router-dom';*/
 import { ApplicationState } from '../store';
 import * as TaskStore from '../store/Tasks';
 import { DataView, DataViewLayoutOptions } from 'primereact/dataview';
@@ -20,7 +19,7 @@ type TaskProps =
 
 class FetchData extends React.PureComponent<TaskProps> {
     public state = {
-        layout: "list",
+        layout: "grid",
         op: React.createRef<OverlayPanel>(),
         newTaskName: "",
         newTaskNameValid: true,
@@ -154,7 +153,7 @@ class FetchData extends React.PureComponent<TaskProps> {
             <div className="p-grid p-nogutter">
                 <div className="p-col-6" style={{ textAlign: 'left' }}>
                     <Button type="button" icon="pi pi-plus" label={'Dodaj'} onClick={(e) => (this.state.op.current as OverlayPanel).toggle(e)} aria-haspopup aria-controls="overlay_panel" className="select-product-button" />
-                    <OverlayPanel ref={this.state.op} showCloseIcon id="overlay_panel" style={{ width: '450px', padding:'10px'}} className="overlaypanel-demo">
+                    <OverlayPanel ref={this.state.op} showCloseIcon id="overlay_panel" style={{ width: '450px', padding: '10px' }} className="overlaypanel-demo" dismissable={false}>
                         <div className="p-float-label p-mb-4 p-fluid">
                             <InputText
                                 id="in"
@@ -222,7 +221,7 @@ class FetchData extends React.PureComponent<TaskProps> {
 
     private ScheduleOverlay = (data: TaskStore.Task) => {
         return ( 
-            <OverlayPanel ref={this.state.scheduleOp} showCloseIcon id="overlay_panel" style={{ width: '450px', padding:'10px'}} className="overlaypanel-demo">
+            <OverlayPanel ref={this.state.scheduleOp} showCloseIcon id="overlay_panel" style={{ width: '450px', padding: '10px' }} className="overlaypanel-demo" dismissable={false}>
 
                 <div className="p-float-label p-mb-4 p-fluid">
                     <label htmlFor="scheduleStart">Data i godzina rozpoczęcia</label>
