@@ -22,7 +22,7 @@ namespace Todos.Controllers
         public IActionResult Schedule([FromBody] TaskToSchedule task)
         {
             Task task2 = Task.Schedule(task.Id, task.Date, task.Meeting);
-            return Ok(task2);
+            return Ok(task2.CreateDTO());
         }
 
         [HttpGet("Postpone/{id}")]
@@ -44,7 +44,7 @@ namespace Todos.Controllers
         {
             using TaskContext ctx = new();
             Task task2 = Task.Create(ctx.Users.FirstOrDefault(x => x.Id == task.UserId), task.Name, task.LastDate, task.Interval);
-            return Ok(task2);
+            return Ok(task2.CreateDTO());
         }
 
         [HttpGet("GetUsers")]
@@ -96,7 +96,7 @@ namespace Todos.Controllers
     public class TaskToSchedule
     {
         public int Id { get; set; }
-        public DateTime Date { get; set; }
+        public DateTime? Date { get; set; }
         public DateTime? Meeting { get; set; }
     }
 }

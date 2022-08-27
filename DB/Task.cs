@@ -41,7 +41,7 @@ namespace Todos
             ctx.SaveChanges();
         }
 
-        internal static Task Schedule(int id, DateTime date, DateTime? meeting)
+        internal static Task Schedule(int id, DateTime? date, DateTime? meeting)
         {
             using TaskContext ctx = new();
             Task task = ctx.Tasks
@@ -49,67 +49,84 @@ namespace Todos
                 .Include(i => i.User)
                 .Include(i => i.Checks)
                 .First();
-            task.Meeting = new TimeSpan(1, 0, 0);
-            if (meeting.HasValue)
+            if(date.HasValue)
             {
-                task.Meeting = new TimeSpan((meeting.Value.Hour + 2) % 24, meeting.Value.Minute, 0);
+                task.Meeting = new TimeSpan(1, 0, 0);
+                if (meeting.HasValue)
+                {
+                    task.Meeting = new TimeSpan((meeting.Value.Hour + 2) % 24, meeting.Value.Minute, 0);
+                }
+                task.Scheduled = date;
+                task.State = State.Scheduled;
             }
-            task.Scheduled = date;
-            task.State = State.Scheduled;
+            else
+            {
+                task.Meeting = null;
+                task.Scheduled = null;
+                task.State = State.Safe;
+            }
             ctx.SaveChanges();
+            UpdateState(task.TaskId);
             return task;
         }
 
-        public void UpdateState()
+        public static void UpdateState(int taskId)
         {
-            State start = State;
-            if (!Scheduled.HasValue)
+            using TaskContext ctx = new();
+            Task task = ctx.Tasks
+                .Where(x => x.TaskId == taskId)
+                .Include(i => i.User)
+                .Include(i => i.Checks)
+                .First();
+            State start = task.State;
+            if (!task.Scheduled.HasValue)
             {
-                DateTime compareDate = AddedDate;
-                if (Checks is not null)
+                DateTime compareDate = task.AddedDate;
+                if (task.Checks is not null)
                 {
-                    compareDate = Checks.OrderBy(x => x.Date).Last().Date;
+                    compareDate = task.Checks.OrderBy(x => x.Date).Last().Date;
                 }
-                if (DateTime.Now > compareDate + new TimeSpan(Interval + ExtraTime, 0,0,0))
+                if (DateTime.Now > compareDate + new TimeSpan(task.Interval + task.ExtraTime, 0,0,0))
                 {
-                    State = State.Urgent;
+                    task.State = State.Urgent;
                 }
-                else if (Interval >= 92)
+                else if (task.Interval >= 92)
                 {
-                    if (DateTime.Now > compareDate + new TimeSpan(ExtraTime + Interval, 0, 0, 0) - new TimeSpan(7, 0, 0, 0))
+                    if (DateTime.Now > compareDate + new TimeSpan(task.ExtraTime + task.Interval, 0, 0, 0) - new TimeSpan(7, 0, 0, 0))
                     {
-                        State = State.VeryClose;
+                        task.State = State.VeryClose;
                     }
-                    else if (DateTime.Now > compareDate + new TimeSpan(ExtraTime + Interval, 0, 0, 0) - new TimeSpan(30, 0, 0, 0))
+                    else if (DateTime.Now > compareDate + new TimeSpan(task.ExtraTime + task.Interval, 0, 0, 0) - new TimeSpan(30, 0, 0, 0))
                     {
-                        State = State.Close;
+                        task.State = State.Close;
                     }
                     else
                     {
-                        State = State.Safe;
+                        task.State = State.Safe;
                     }
                 }
                 else
                 {
-                    if (DateTime.Now > compareDate + new TimeSpan(ExtraTime + Interval, 0, 0, 0) - new TimeSpan(Interval, 0, 0, 0) / 6)
+                    if (DateTime.Now > compareDate + new TimeSpan(task.ExtraTime + task.Interval, 0, 0, 0) - new TimeSpan(task.Interval, 0, 0, 0) / 6)
                     {
-                        State = State.VeryClose;
+                        task.State = State.VeryClose;
                     }
-                    else if (DateTime.Now > compareDate + new TimeSpan(ExtraTime + Interval, 0, 0, 0) - new TimeSpan(Interval, 0, 0, 0) / 3)
+                    else if (DateTime.Now > compareDate + new TimeSpan(task.ExtraTime + task.Interval, 0, 0, 0) - new TimeSpan(task.Interval, 0, 0, 0) / 3)
                     {
-                        State = State.Close;
+                        task.State = State.Close;
                     }
                     else
                     {
-                        State = State.Safe;
+                        task.State = State.Safe;
                     }
                 }
             }
-            else if (DateTime.Now > Scheduled)
+            else if (DateTime.Now > task.Scheduled)
             {
-                Checks.Add(new Check() { Date = Scheduled.Value });
-                Scheduled = null;
+                task.Checks.Add(new Check() { Date = task.Scheduled.Value });
+                task.Scheduled = null;
             }
+            ctx.SaveChanges();
         }
 
         internal static void Delete(int id)
@@ -130,8 +147,6 @@ namespace Todos
             using TaskContext ctx = new();
             Task task = ctx.Tasks
                 .Where(x => x.TaskId == id)
-                .Include(i => i.User)
-                .Include(i => i.Checks)
                 .First();
             task.ExtraTime += 7;
             ctx.SaveChanges();
@@ -160,10 +175,10 @@ namespace Todos
                 Scheduled = null,
             };
 
-            task.UpdateState();
 
             using TaskContext ctx = new();
-            ctx.Tasks.Add(task);
+            task = ctx.Tasks.Add(task);
+            UpdateState(task.TaskId);
             ctx.SaveChanges();
 
             return task;
@@ -171,17 +186,24 @@ namespace Todos
 
         public TaskDTO CreateDTO()
         {
+            UpdateState(TaskId);
+            using TaskContext ctx = new();
+            Task task = ctx.Tasks
+               .Where(x => x.TaskId == TaskId)
+               .Include(i => i.User)
+               .Include(i => i.Checks)
+               .First();
             return new TaskDTO()
             {
                 TaskId = TaskId,
-                Name = Name,
-                Interval = Interval,
-                ExtraTime = ExtraTime,
-                User = User.CreateDTO(),
-                State = State,
-                AddedDate = AddedDate,
-                Scheduled = Scheduled,
-                Checks = Checks.ConvertToDTOList() 
+                Name = task.Name,
+                Interval = task.Interval,
+                ExtraTime = task.ExtraTime,
+                User = task.User.CreateDTO(),
+                State = task.State,
+                AddedDate = task.AddedDate,
+                Scheduled = task.Scheduled,
+                Checks = task.Checks.ConvertToDTOList() 
             };
         }
     }
@@ -201,11 +223,11 @@ namespace Todos
 
     public enum State
     {
-        Safe = 2,
-        Scheduled = 1,
+        Safe = 1,
+        Scheduled = 2,
         Close = 5,
         VeryClose = 6,
-        Urgent = 4,
+        Urgent = 7,
         Invalid = 10,
     }
 }

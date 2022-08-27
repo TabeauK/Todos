@@ -82,7 +82,7 @@ class FetchData extends React.PureComponent<TaskProps> {
     }
 
     private validateScheduleDate() {
-        if (this.state.scheduleDate === null || this.state.scheduleDate < new Date(Date.now()))
+        if (this.state.scheduleDate !== null && this.state.scheduleDate < new Date(Date.now()))
             this.setState({ scheduleDateValid: false })
         else
             this.setState({ scheduleDateValid: true })
@@ -94,17 +94,6 @@ class FetchData extends React.PureComponent<TaskProps> {
         return this.state.scheduleTimeValid;
     }
 
-    private renderTable() {
-        return(
-            <div className="dataview-demo" >
-                <div className="card">
-                    <DataView value={this.props.Tasks} layout={this.state.layout} header={this.renderHeader()}
-                        itemTemplate={this.itemTemplate} paginator rows={9} emptyMessage={"Brak zadań"} sortOrder={-1} sortField={"state"}/>
-                </div>
-            </div>
-        );
-    }
-
     private deadline = (task: TaskStore.Task) => {
         let nextDate = new Date(task.addedDate);
         if (task.checks !== [] && task.checks !== null && task.checks !== undefined)
@@ -113,13 +102,41 @@ class FetchData extends React.PureComponent<TaskProps> {
         return nextDate;
     }
 
+    private compare = (task1: TaskStore.Task, task2: TaskStore.Task) => {
+        if (task1.state > task2.state) {
+            return -1;
+        } else if (task1.state < task2.state) {
+            return 1;
+        }
+
+        if (this.deadline(task1) > this.deadline(task2)) {
+            return 1;
+        } else {
+            return -1;
+        }
+
+    }
+
+    private renderTable() {
+        return(
+            <div className="dataview-demo" >
+                <div className="card">
+                    <DataView value={this.props.Tasks.sort((x, y) => this.compare(x, y))} layout={this.state.layout} header={this.renderHeader()}
+                        itemTemplate={this.itemTemplate} paginator rows={9} emptyMessage={"Brak zadań"} />
+                </div>
+            </div>
+        );
+    }
+
+
+
     private statusName = (task: TaskStore.Task) => {
         switch (task.state) {
-            case 1:
-                return "Zadanie zaplanowane";
             case 2:
+                return "Zadanie zaplanowane";
+            case 1:
                 return "Zadanie bezpiecznie daleko";
-            case 4:
+            case 7:
                 return "Do zrealizowania ASAP";
             case 5:
                 return "Zadanie się zbiliża";
@@ -132,11 +149,11 @@ class FetchData extends React.PureComponent<TaskProps> {
 
     private statusColor = (task: TaskStore.Task) => {
         switch (task.state) {
-            case 1:
-                return { borderColor: "blue"};
             case 2:
+                return { borderColor: "blue"};
+            case 1:
                 return { borderColor: "green" };
-            case 4:
+            case 7:
                 return { borderColor: "red" };
             case 5:
                 return { borderColor: "yellow" };
@@ -286,16 +303,26 @@ class FetchData extends React.PureComponent<TaskProps> {
                         <div className="product-description">
                             <div>Ostatnie wykonanie: {nextDate.toLocaleDateString("pl-PL")}</div>
                             <div>Deadline: {this.deadline(data).toLocaleDateString("pl-PL")}</div>
+                            {!data.scheduled || (
+                                <div>Zaplanowane na: {new Date(data.scheduled as Date).toLocaleDateString("pl-PL")}</div>
+                            )}
                             <div>Cykl: {data.interval} dni</div>
                         </div>
                         <i className="pi pi-tag product-category-icon"></i><span className="product-category">{this.statusName(data)}</span>
                     </div>
                     <div className="product-list-action">
-                        <Button type="button" icon="pi pi-calendar" label={'Zaplanuj'} onClick={(e) => {
-                            (this.state.scheduleOp.current as OverlayPanel).toggle(e);
-                            this.setState({ scheduleTaskId: data.taskId });
-                        }} aria-haspopup aria-controls="overlay_panel" className="select-product-button" />
-                        {this.ScheduleOverlay(data)}
+                        { data.state === TaskStore.State.Scheduled || (
+                            <Button type="button" icon="pi pi-calendar" label={'Zaplanuj'} onClick={(e) => {
+                                (this.state.scheduleOp.current as OverlayPanel).toggle(e);
+                                this.setState({ scheduleTaskId: data.taskId });
+                            }} aria-haspopup aria-controls="overlay_panel" className="select-product-button" />
+                        )}
+                        {data.state === TaskStore.State.Scheduled || this.ScheduleOverlay(data) }
+                        {data.state !== TaskStore.State.Scheduled || (
+                            <Button type="button" icon="pi pi-calendar" label={'Odplanuj'} onClick={(e) => {
+                                this.props.scheduleTaskAction(data.taskId, null, null);
+                            }} aria-haspopup aria-controls="overlay_panel" className="select-product-button" />
+                        )}
                         <Button icon="pi pi-check-square" label="Zrobione" onClick={() => this.props.checkTaskAction(data)} />
                         <Button icon="pi pi-step-forward" label="Odłóż" onClick={() => this.props.postponeTaskAction(data)} />
                         <Button icon="pi pi-trash" label="Usuń" onClick={() => this.props.deleteTaskAction(data)} />
@@ -322,15 +349,25 @@ class FetchData extends React.PureComponent<TaskProps> {
                         <div className="product-description">
                             <div>Ostatnie wykonanie: {nextDate.toLocaleDateString("pl-PL")}</div>
                             <div>Deadline: {this.deadline(data).toLocaleDateString("pl-PL")}</div>
+                            {!data.scheduled || (
+                                <div>Zaplanowane na: {new Date(data.scheduled as Date).toLocaleDateString("pl-PL")}</div>
+                            )}
                             <div>Cykl: {data.interval} dni</div>
                         </div>
                     </div>
                     <div className="product-grid-item-bottom">
-                        <Button type="button" icon="pi pi-calendar" label={'Zaplanuj'} onClick={(e) => {
-                            (this.state.scheduleOp.current as OverlayPanel).toggle(e);
-                            this.setState({ scheduleTaskId: data.taskId });
-                        }} aria-haspopup aria-controls="overlay_panel" className="select-product-button" />
-                        {this.ScheduleOverlay(data)}
+                        {data.state === TaskStore.State.Scheduled || (
+                            <Button type="button" icon="pi pi-calendar" label={'Zaplanuj'} onClick={(e) => {
+                                (this.state.scheduleOp.current as OverlayPanel).toggle(e);
+                                this.setState({ scheduleTaskId: data.taskId });
+                            }} aria-haspopup aria-controls="overlay_panel" className="select-product-button" />
+                        )}
+                        {data.state === TaskStore.State.Scheduled || this.ScheduleOverlay(data)}
+                        {data.state !== TaskStore.State.Scheduled || (
+                            <Button type="button" icon="pi pi-calendar" label={'Odplanuj'} onClick={(e) => {
+                                this.props.scheduleTaskAction(data.taskId, null, null);
+                            }} aria-haspopup aria-controls="overlay_panel" className="select-product-button" />
+                        )}
                         <Button icon="pi pi-check-square" label="Zrobione" onClick={() => this.props.checkTaskAction(data)} />
                         <Button icon="pi pi-step-forward" label="Odłóż" onClick={() => this.props.postponeTaskAction(data)} />
                         <Button icon="pi pi-trash" label="Usuń" onClick={() => this.props.deleteTaskAction(data)} />

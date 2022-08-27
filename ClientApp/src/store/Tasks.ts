@@ -32,11 +32,11 @@ export interface Task {
 }
 
 export enum State {
-    Safe = 2,
-    Scheduled = 1,
+    Safe = 1,
+    Scheduled = 2,
     Close = 5,
     VeryClose = 6,
-    Urgent = 4
+    Urgent = 7
 }
 
 export interface Check {
@@ -197,7 +197,7 @@ export const actionCreators = {
                 }).then(() => requestTasks(dispatch, getState));
         }
     },
-    scheduleTaskAction: (taskId: number, date: Date, timeInterval: Date | null): AppThunkAction<KnownAction> => (dispatch, getState) => {
+    scheduleTaskAction: (taskId: number, date: Date | null, timeInterval: Date | null): AppThunkAction<KnownAction> => (dispatch, getState) => {
         const appState = getState();
         const requestOptions = {
             method: 'POST',
@@ -208,7 +208,6 @@ export const actionCreators = {
                 meeting: timeInterval,
             })
         };
-        // Only load data if it's something we don't already have (and are not already loading)
 
         if (appState) {
             fetch(`main/Schedule`, requestOptions)
