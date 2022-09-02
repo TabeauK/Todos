@@ -178,8 +178,8 @@ namespace Todos
 
             using TaskContext ctx = new();
             task = ctx.Tasks.Add(task);
-            UpdateState(task.TaskId);
             ctx.SaveChanges();
+            UpdateState(task.TaskId);
 
             return task;
         }
